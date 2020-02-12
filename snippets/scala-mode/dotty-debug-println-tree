@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: dotty-debug-println-tree
+# key: dbgt
+# --
+
+${1:debug}.println(i"#$3$2 {\${$2.productPrefix}} {{{\\n\${${2:}}\\n}}}")

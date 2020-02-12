@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: dotty-debug-println-block
+# key: dbgb
+# --
+
+${1:debug}.println(i"#$2 {{{")
+$0
+$1.println("}}}")

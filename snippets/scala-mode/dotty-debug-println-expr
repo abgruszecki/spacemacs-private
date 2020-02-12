@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: dotty-debug-println-expr
+# key: dbgx
+# --
+
+${1:debug}.println(i"#$3$2 \${${2:}}")

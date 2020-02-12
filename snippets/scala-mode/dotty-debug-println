@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: dotty-debug-println
+# key: dbg
+# --
+
+${1:debug}.println(i"$0")
