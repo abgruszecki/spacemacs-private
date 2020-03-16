@@ -181,20 +181,61 @@
   (sbt/send-command sbt/compile-command))
 
 (defvar dotty//prints-commented-out-p nil)
-(defun dotty/toggle-printing ()
+(defmacro dotty//toggle-printing/replace (pattern replacement bound literal)
+  ;; NOTE it mostly isn't a problem that bound isn't updated after replacements,
+  ;; NOTE but only because it's ever only set to the end of the current line
+  `(let ((cnt 0))
+     (while (and (or (not ,bound) (> ,bound (point)))
+             (re-search-forward (rx ,pattern) ,bound t))
+       (replace-match ,replacement t ,literal)
+       (setq cnt (1+ cnt)))
+     cnt))
+
+(defun dotty//uncomment-printing (&optional bound)
+  (+
+   (save-excursion
+     (dotty//toggle-printing/replace "trace/*force*/(" "trace.force(" bound t))
+   (save-excursion
+     (dotty//toggle-printing/replace "/*newPrinter*/noPrinter" "new Printer" bound t))
+  ))
+
+(defun dotty//comment-printing (&optional bound)
+  (+
+   (save-excursion
+     (dotty//toggle-printing/replace "trace.force(" "trace/*force*/(" bound t))
+   (save-excursion
+     (dotty//toggle-printing/replace "new Printer" "/*newPrinter*/noPrinter" bound t))
+   ))
+
+(defun dotty/toggle-printing-this-line ()
+  (interactive)
+  (if (save-excursion
+            (beginning-of-line)
+            (zerop (dotty//uncomment-printing (point-at-eol))))
+      (save-excursion
+        (beginning-of-line)
+        (zerop (dotty//comment-printing (point-at-eol))))))
+
+(defun dotty/toggle-printing-global ()
   (interactive)
   (save-excursion
     (if (not dotty//prints-commented-out-p)
-        (mapc (lambda (buf) (with-current-buffer buf
-                              (replace-string "trace.force(" "trace/*force*/(" nil (point-min) (point-max))
-                              (replace-string "new Printer" "/*newPrinter*/noPrinter" nil (point-min) (point-max))))
+        (mapc (lambda (buf)
+                (with-current-buffer buf
+                  (beginning-of-buffer)
+                  (if (eq major-mode 'scala-mode) (dotty//comment-printing))))
               (projectile-project-buffers))
-      (mapc (lambda (buf) (with-current-buffer buf
-                            (replace-string "trace/*force*/(" "trace.force(" nil (point-min) (point-max))
-                            (replace-string "/*newPrinter*/noPrinter" "new Printer" nil (point-min) (point-max))))
+      (mapc (lambda (buf)
+              (with-current-buffer buf
+                (beginning-of-buffer)
+                (if (eq major-mode 'scala-mode) (dotty//uncomment-printing))))
             (projectile-project-buffers))))
   (setf dotty//prints-commented-out-p (not dotty//prints-commented-out-p))
   (message "Dotty printing: %s" (if dotty//prints-commented-out-p "disabled" "enabled")))
+
+(defun dotty/toggle-printing (prefix)
+  (interactive "P")
+  (if prefix (dotty/toggle-printing-this-line) (dotty/toggle-printing-global)))
 
 (defun sbt/repeat-last-operation ()
   (interactive)
@@ -213,6 +254,107 @@
     (comint-previous-input 1)
     (comint-send-input)))
 
+;;; Indirect
+
+(defvar-local dotty/trace/indirect-buffer nil
+  "Indirect buffer connected to the current buffer, if any")
+
+(defmacro dotty//trace/in-indirect-buffer (&rest body)
+  (declare (indent 0))
+  `(progn
+     (when (not (buffer-live-p dotty/trace/indirect-buffer))
+       (setq dotty/trace/indirect-buffer nil))
+     (if (not dotty/trace/indirect-buffer)
+         (progn
+           (setq dotty/trace/indirect-buffer
+                 (make-indirect-buffer
+                  (current-buffer)
+                  (s-replace-regexp (rx "*" eol)
+                                    (lambda (s) (concat "-focused" s))
+                                    (buffer-name))))
+           (with-current-buffer dotty/trace/indirect-buffer
+             (dotty-trace-mode)))
+       (with-current-buffer dotty/trace/indirect-buffer
+         (when (buffer-narrowed-p)
+           (widen))))
+     (with-current-buffer dotty/trace/indirect-buffer
+       ,@body)))
+
+(defun dotty/trace/preview-header ()
+  (interactive)
+  (when (not (dotty/current-line-trace-header))
+    (error "Not looking at a trace header!"))
+  (-let [p (point)]
+    (dotty//trace/in-indirect-buffer
+      (origami-close-all-nodes (current-buffer))
+      (goto-char p)
+      (dotty/trace/narrow-header)
+      (with-selected-window (display-buffer (current-buffer)
+                                            '(nil . ((inhibit-same-window . t))))
+        (beginning-of-buffer)
+        (beginning-of-line-text))
+      )))
+
+(defun dotty/trace/peek-header ()
+  (interactive)
+  (when (not (dotty/current-line-trace-header))
+    (error "Not looking at a trace header!"))
+  (-let [p (point)]
+    (dotty//trace/in-indirect-buffer
+      (origami-close-all-nodes (current-buffer))
+      (select-window (display-buffer (current-buffer)
+                                     '(nil . ((inhibit-same-window . t)))))
+      (goto-char p)
+      (save-excursion
+       (dotty/trace/narrow-header))
+      (dotty/jump-to-matching-trace-header)
+      (beginning-of-line)
+      (pcase (dotty/current-line-trace-header)
+        (`(opening . ,_)
+         (evil-scroll-line-to-top 1)
+         (forward-line)
+         (save-excursion
+           (origami-forward-toggle-node (current-buffer) (point)))
+         (forward-line)
+         )
+        (`(closing . ,_)
+         (origami-forward-toggle-node (current-buffer) (point))
+         (evil-scroll-line-to-top nil))))))
+
+(defun dotty//trace/end-of-answer ()
+  (interactive)
+  (end-of-line)
+  (backward-char)
+  (assert (looking-at-p "{"))
+  (evil-jump-item)
+  (end-of-line)
+  (backward-char))
+
+(defun dotty/trace/narrow-header ()
+  (interactive)
+  (-if-let ((type . size) (dotty/current-line-trace-header))
+      (-let [(beg . end) (ecase type
+                           ('opening
+                            (cons (save-excursion
+                                    (beginning-of-line)
+                                    (point))
+                                  (save-excursion
+                                    (dotty/jump-to-matching-trace-header)
+                                    (dotty//trace/end-of-answer)
+                                    (point)
+                                    )))
+                           ('closing
+                            (cons (save-excursion
+                                    (dotty/jump-to-matching-trace-header)
+                                    (beginning-of-line)
+                                    (point))
+                                  (save-excursion
+                                    (dotty//trace/end-of-answer)
+                                    (point)))))]
+        (goto-char beg)
+        (narrow-to-region beg end))
+    (error "Not looking at a trace header!")))
+
 ;;; Motions
 
 (defun dotty/current-line-trace-header ()
@@ -229,22 +371,24 @@
       (ecase type
         ('opening
          (re-search-forward
-          (rx-to-string `(seq bol (repeat ,size " ") "<==")))
+          (concat "^" (s-repeat size " ") "<=="))
          (beginning-of-line-text))
 
         ('closing
          (re-search-backward
-          (rx-to-string `(seq bol (repeat ,size " ") "==>")))
+          (concat "^" (s-repeat size " ") "==>"))
          (beginning-of-line-text)))
     (error "Not looking at a trace header!")))
 
 
 ;;; Utility functions
 
-(defun dotty//projectile/save-project-files ()
-  "Save files in current project."
+(defun dotty//projectile/save-project-files (&optional arg)
+  "Save files in current project.
+If ARG is non-nil, do not ask about saving (mimicks behaviour of `save-some-buffers')."
+  (interactive "P")
   (-let [project-root (projectile-project-root)]
-    (save-some-buffers nil (lambda ()
+    (save-some-buffers arg (lambda ()
                              (projectile-project-buffer-p (current-buffer)
                                                           project-root)))))
 
@@ -317,6 +461,12 @@
   (kbd "<C-iso-lefttab>") (lambda () (interactive) (re-search-backward "^#!"))
   "g%" 'dotty/jump-to-matching-trace-header
   )
+
+(spacemacs/set-leader-keys-for-major-mode 'dotty-trace-mode
+  "p" #'dotty/trace/peek-header
+  "P" #'dotty/trace/preview-header
+  "n" #'dotty/trace/narrow-header
+  "<SPC>" #'dotty/jump-to-matching-trace-header)
 
 ;;; Internal functions
 
