@@ -174,6 +174,8 @@
 
 (defun sbt/send-test-command ()
   (interactive (sbt//invocation 'sbt/send-test-command))
+  (when (not dotty//prints-commented-out-p)
+    (dotty/toggle-printing-global))
   (sbt/send-command sbt/test-command))
 
 (defun sbt/send-compile-command ()
@@ -388,9 +390,12 @@
 If ARG is non-nil, do not ask about saving (mimicks behaviour of `save-some-buffers')."
   (interactive "P")
   (-let [project-root (projectile-project-root)]
-    (save-some-buffers arg (lambda ()
-                             (projectile-project-buffer-p (current-buffer)
-                                                          project-root)))))
+    (save-some-buffers arg
+                       (lambda ()
+                         (and buffer-file-name
+                              (eq major-mode 'scala-mode)
+                              (projectile-project-buffer-p (current-buffer)
+                                                           project-root))))))
 
 (defun sbt//post-redirect-cleanup ()
   (unless (get-buffer comint-redirect-output-buffer)
@@ -430,7 +435,8 @@ If ARG is non-nil, do not ask about saving (mimicks behaviour of `save-some-buff
   (font-lock-mode t)
 
   (setq-local origami-fold-style 'triple-braces)
-  (origami-mode 1))
+  (origami-mode 1)
+  (origami-close-all-nodes (current-buffer)))
 
 ;;; Keybindings
 

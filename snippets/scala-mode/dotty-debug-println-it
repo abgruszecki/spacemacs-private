@@ -1,0 +1,11 @@
+# -*- mode: snippet -*-
+# name: dotty-debug-println-it
+# key: dbgi
+# expand-env: ((yas-arg/it ""))
+# --
+
+locally {
+  val it =  ${1:`yas-arg/it`}
+  val itShow = "$1"
+  $0
+}

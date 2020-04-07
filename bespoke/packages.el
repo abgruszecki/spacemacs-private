@@ -9,29 +9,12 @@
 ;;
 ;;; License: GPLv3
 
-;;; Commentary:
-
-;; See the Spacemacs documentation and FAQs for instructions on how to implement
-;; a new layer:
-;;
-;;   SPC h SPC layers RET
-;;
-;;
-;; Briefly, each package to be installed or configured by this layer should be
-;; added to `bespoke-packages'. Then, for each package PACKAGE:
-;;
-;; - If PACKAGE is not referenced by any other Spacemacs layer, define a
-;;   function `bespoke/init-PACKAGE' to load and initialize the package.
-
-;; - Otherwise, PACKAGE is already referenced by another Spacemacs layer, so
-;;   define the functions `bespoke/pre-init-PACKAGE' and/or
-;;   `bespoke/post-init-PACKAGE' to customize the package as it is loaded.
-
 ;;; Code:
 
 (defconst bespoke-packages
   '(
     (evil-org :location local)
+    (scala-mode :location local)
     )
   "The list of Lisp packages required by the bespoke layer.
 
@@ -76,5 +59,17 @@ Each entry is either:
     :config
     (spacemacs|hide-lighter evil-org-mode))
   )
+
+(defun bespoke/init-scala-mode ()
+  (use-package scala-mode
+    :defer t
+    :commands
+    (scala-mode))
+
+  (progn
+    (add-to-list 'auto-mode-alist
+                 '("\\.\\(scala\\|sbt\\)\\'" . scala-mode))
+    (modify-coding-system-alist 'file "\\.\\(scala\\|sbt\\)\\'" 'utf-8)))
+
 
 ;;; packages.el ends here

@@ -51,10 +51,6 @@ Each entry is either:
     ;; :defer t
     :after scala-mode))
 
-(defun dotty/init-scala-mode ()
-  (use-package scala-mode
-    :defer t))
-
 (defun dotty/init-origami ()
   (use-package origami
     :defer t))
