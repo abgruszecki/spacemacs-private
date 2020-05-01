@@ -5,7 +5,6 @@
 (require 'dash)
 (require 'evil)
 (require 'projectile)
-(require 'origami)
 
 ;;; Variables
 
@@ -288,12 +287,12 @@
     (error "Not looking at a trace header!"))
   (-let [p (point)]
     (dotty//trace/in-indirect-buffer
-      (origami-close-all-nodes (current-buffer))
+      (hs-hide-all)
       (goto-char p)
       (dotty/trace/narrow-header)
       (with-selected-window (display-buffer (current-buffer)
                                             '(nil . ((inhibit-same-window . t))))
-        (beginning-of-buffer)
+        (goto-char (point-min))
         (beginning-of-line-text))
       )))
 
@@ -303,7 +302,7 @@
     (error "Not looking at a trace header!"))
   (-let [p (point)]
     (dotty//trace/in-indirect-buffer
-      (origami-close-all-nodes (current-buffer))
+      (hs-hide-all)
       (select-window (display-buffer (current-buffer)
                                      '(nil . ((inhibit-same-window . t)))))
       (goto-char p)
@@ -316,11 +315,11 @@
          (evil-scroll-line-to-top 1)
          (forward-line)
          (save-excursion
-           (origami-forward-toggle-node (current-buffer) (point)))
+           (dotty-trace/hs-forward-toggle-node))
          (forward-line)
          )
         (`(closing . ,_)
-         (origami-forward-toggle-node (current-buffer) (point))
+         (dotty-trace/hs-forward-toggle-node)
          (evil-scroll-line-to-top nil))))))
 
 (defun dotty//trace/end-of-answer ()
@@ -330,7 +329,8 @@
   (assert (looking-at-p "{"))
   (evil-jump-item)
   (end-of-line)
-  (backward-char))
+  ;; (backward-char)
+  )
 
 (defun dotty/trace/narrow-header ()
   (interactive)
@@ -397,12 +397,36 @@ If ARG is non-nil, do not ask about saving (mimicks behaviour of `save-some-buff
                               (projectile-project-buffer-p (current-buffer)
                                                            project-root))))))
 
+(defun dotty-trace/summarise-trace ()
+  (interactive)
+  (let ((atts 0)
+        (errs 0)
+        (res "???"))
+    (save-excursion
+      (goto-char (point-min))
+      (while (and (prog1
+                      t
+                    ;; REAL BODY
+                    (when (looking-at (rx bol "#!!!"))
+                      (setq atts (1+ atts)))
+                    (when (looking-at  (rx bol "-- Error"))
+                      (setq errs (1+ errs)))
+                    (when (looking-at (rx bol "[success] Total time:"))
+                      (setq res "success"))
+                    (when (looking-at (rx bol "[error] Total time:"))
+                      (setq res "fail"))
+                    ;; / REAL BODY
+                    )
+                  (zerop (forward-line))))
+    (message "Command finished! Status: %s; errors: %s; attentions: %s" res errs atts))))
+
 (defun sbt//post-redirect-cleanup ()
   (unless (get-buffer comint-redirect-output-buffer)
     (error "Could not retrieve buffer for post-redirect cleanup (%s)" comint-redirect-output-buffer))
 
   (with-current-buffer comint-redirect-output-buffer
-    (origami-close-all-nodes (current-buffer))))
+    (hs-hide-all)
+    (dotty-trace/summarise-trace)))
 
 ;;; Dotty minor mode
 
@@ -434,45 +458,61 @@ If ARG is non-nil, do not ask about saving (mimicks behaviour of `save-some-buff
    `(,(concat "^ *" (regexp-opt (list "<==" "==>"))) . 'font-lock-keyword-face))
   (font-lock-mode t)
 
-  (setq-local origami-fold-style 'triple-braces)
-  (origami-mode 1)
-  (origami-close-all-nodes (current-buffer)))
+  (setq-local comment-start "//")
+  (setq-local comment-end "")
+  (setf (alist-get 'dotty-trace-mode hs-special-modes-alist)
+        `(,(rx "{{{")
+          ,(rx "}}}")
+          "//"
+          nil nil))
+  (hs-minor-mode 1)
+  (hs-hide-all))
+
+(defun dotty-trace/hs-forward-toggle-node ()
+  (interactive)
+  (save-excursion
+    (end-of-line)
+    (when (not (looking-back (rx "{{{")))
+      (error "Current line doesn't start a block!"))
+    (hs-toggle-hiding)))
 
 ;;; Keybindings
 
-(spacemacs/set-leader-keys-for-minor-mode 'dotty-minor-mode
-  "$" #'sbt/console
-  "@" #'sbt/repeat-last-command
-  "." #'sbt/repeat-last-operation
+(defun dotty/set-keys ()
+  (spacemacs/set-leader-keys-for-minor-mode 'dotty-minor-mode
+    "$" #'sbt/console
+    "@" #'sbt/repeat-last-command
+    "." #'sbt/repeat-last-operation
 
-  "!!" #'sbt/send-command
-  "!c" #'sbt/send-compile-command
-  "!t" #'sbt/send-test-command
+    "!!" #'sbt/send-command
+    "!c" #'sbt/send-compile-command
+    "!t" #'sbt/send-test-command
 
-  ";" #'dotty/toggle-printing
+    ";" #'dotty/toggle-printing
 
-  "w" #'sbt/watch
-  "l" #'sbt/locked
-  "L" #'sbt/lock
-  "r" #'sbt/output/refresh-watched
-  "R" #'sbt/output/refresh
-  "c" #'sbt/compile-file
-  "C" #'sbt/compile-this-file)
+    "w" #'sbt/watch
+    "l" #'sbt/locked
+    "L" #'sbt/lock
+    "r" #'sbt/output/refresh-watched
+    "R" #'sbt/output/refresh
+    "c" #'sbt/compile-file
+    "C" #'sbt/compile-this-file)
 
-(evil-define-key 'normal dotty-trace-mode-map
-  (kbd "RET") 'origami-forward-toggle-node
-  (kbd "<tab>") (lambda () (interactive) (re-search-forward "^#"))
-  (kbd "<backtab>") (lambda () (interactive) (re-search-backward "^#"))
-  (kbd "<C-tab>") (lambda () (interactive) (re-search-forward "^#!"))
-  (kbd "<C-iso-lefttab>") (lambda () (interactive) (re-search-backward "^#!"))
-  "g%" 'dotty/jump-to-matching-trace-header
+  (evil-define-key 'normal dotty-trace-mode-map
+    (kbd "RET") #'dotty-trace/hs-forward-toggle-node
+    (kbd "<tab>") (lambda () (interactive) (re-search-forward "^#"))
+    (kbd "<backtab>") (lambda () (interactive) (re-search-backward "^#"))
+    (kbd "<C-tab>") (lambda () (interactive) (re-search-forward "^#!"))
+    (kbd "<C-iso-lefttab>") (lambda () (interactive) (re-search-backward "^#!"))
+    "g%" 'dotty/jump-to-matching-trace-header
+    )
+
+  (spacemacs/set-leader-keys-for-major-mode 'dotty-trace-mode
+    "p" #'dotty/trace/peek-header
+    "P" #'dotty/trace/preview-header
+    "n" #'dotty/trace/narrow-header
+    "<SPC>" #'dotty/jump-to-matching-trace-header)
   )
-
-(spacemacs/set-leader-keys-for-major-mode 'dotty-trace-mode
-  "p" #'dotty/trace/peek-header
-  "P" #'dotty/trace/preview-header
-  "n" #'dotty/trace/narrow-header
-  "<SPC>" #'dotty/jump-to-matching-trace-header)
 
 ;;; Internal functions
 

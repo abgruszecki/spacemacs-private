@@ -15,9 +15,6 @@
   '((dotty :location local)
     scala-mode
     lsp-mode
-
-    (origami :toggle t
-             :excluded nil)
     )
   "The list of Lisp packages required by the dotty layer.
 
@@ -48,12 +45,7 @@ Each entry is either:
 
 (defun dotty/init-dotty ()
   (use-package dotty
-    ;; :defer t
     :after scala-mode))
-
-(defun dotty/init-origami ()
-  (use-package origami
-    :defer t))
 
 (defun dotty/pre-init-lsp-mode ()
   (spacemacs|use-package-add-hook lsp-mode
