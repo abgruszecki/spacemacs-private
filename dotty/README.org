@@ -1,0 +1,50 @@
+* Dotty layer
+
+** lsp support
+  
+*** Configuration
+    This layer needs Coursier (https://github.com/coursier/coursier) to run Dotty LSP.
+
+    You also need to build LSP and install it locally.
+
+    To do that, run the following commands in SBT:
+    
+    #+begin_src text
+        ;configureIDE ;publishLocal ;dotty-interfaces/publishLocal ;tasty-core-bootstrapped/publishLocal ;dotty-library-bootstrapped/publishLocal ;dotty-compiler-bootstrapped/publishLocal ;dotty-language-server/publishLocal
+    #+end_src
+    
+    The above comprises the following commands:
+    
+    #+begin_src text
+      configureIDE
+      dotty-interfaces/publishLocal
+      tasty-core-bootstrapped/publishLocal
+      dotty-library-bootstrapped/publishLocal
+      dotty-compiler-bootstrapped/publishLocal
+      dotty-language-server/publishLocal
+    #+end_src
+    
+    Typically it's useful to build LSP at the point one branched off =master=. This commit can be checked out using:
+
+    #+begin_src bash
+      git checkout $(git merge-base master HEAD)
+    #+end_src
+    
+*** Keybindings
+   
+   Useful LSP keybindings:
+   
+   | Keybindings              | Description            |
+   | -------------            | --------------         |
+   | ~SPC SPC lsp~            | Start LSP mode         |
+   | ~SPC SPC lsp-disconnect~ | Stop LSP mode          |
+   | ~, b r~                  | Restart (a) LSP server |
+
+   Dotty LSP likes to crash from time to time, so restarting the server is useful.
+   
+   LSP logs can be viewed with:
+
+   | Keybindings                   | Description                                                           |
+   | -------------                 | --------------                                                        |
+   | ~SPC b B *dotty-lsp::stderr*~ | Stderr of Dotty LSP (more useful)                                     |
+   | ~SPC b B *dotty-lsp*~         | Stdout of Dotty LSP (needs to be turned on to be logged, less useful) |
