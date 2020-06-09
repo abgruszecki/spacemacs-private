@@ -3,6 +3,6 @@
 # key: dbgb
 # --
 
-${1:debug}.println(i"#$2 {{{")
+${1:`(or yas-arg/dotty-current-printer "debug")`}.println(i"#$2 {{{")
 $0
 $1.println("}}}")

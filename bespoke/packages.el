@@ -14,7 +14,6 @@
 (defconst bespoke-packages
   '(
     (evil-org :location local)
-    (scala-mode :location local)
     )
   "The list of Lisp packages required by the bespoke layer.
 
@@ -60,16 +59,7 @@ Each entry is either:
     (spacemacs|hide-lighter evil-org-mode))
   )
 
-(defun bespoke/init-scala-mode ()
-  (use-package scala-mode
-    :defer t
-    :commands
-    (scala-mode))
 
-  (progn
-    (add-to-list 'auto-mode-alist
-                 '("\\.\\(scala\\|sbt\\)\\'" . scala-mode))
-    (modify-coding-system-alist 'file "\\.\\(scala\\|sbt\\)\\'" 'utf-8)))
 
 
 ;;; packages.el ends here

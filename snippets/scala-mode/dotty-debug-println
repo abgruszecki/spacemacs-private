@@ -3,4 +3,4 @@
 # key: dbg
 # --
 
-${1:debug}.println(i"$0")
+${1:`(or yas-arg/dotty-current-printer "debug")`}.println(i"$0")

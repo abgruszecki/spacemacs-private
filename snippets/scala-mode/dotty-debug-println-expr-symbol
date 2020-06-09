@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: dotty-debug-println-expr-symbol
+# key: dbgxs
+# --
+
+${1:`(or yas-arg/dotty-current-printer "debug")`}.println(i"#$3$2 \${${2:}}(\${$2.flags.flagsString})#\${$2.##}")

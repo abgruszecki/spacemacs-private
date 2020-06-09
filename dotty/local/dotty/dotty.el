@@ -141,7 +141,9 @@
 (defun sbt/compile-file (file)
   (interactive (sbt//invocation
                 'sbt/compile-file
-                (read-file-name "SBT compile file: ")))
+                (helm-read-file-name "SBT compile: "
+                                     :name "Read file name (all marked files will be compiled)"
+                                     :marked-candidates t)))
   (dotty//projectile/save-project-files)
   ;; TODO escape the name of the file
   (sbt/run (concat "dotc " sbt/compile-arguments " " file)
@@ -283,7 +285,7 @@
 
 (defun dotty/trace/preview-header ()
   (interactive)
-  (when (not (dotty/current-line-trace-header))
+  (when (not (dotty-trace/current-line-trace-header))
     (error "Not looking at a trace header!"))
   (-let [p (point)]
     (dotty//trace/in-indirect-buffer
@@ -298,7 +300,7 @@
 
 (defun dotty/trace/peek-header ()
   (interactive)
-  (when (not (dotty/current-line-trace-header))
+  (when (not (dotty-trace/current-line-trace-header))
     (error "Not looking at a trace header!"))
   (-let [p (point)]
     (dotty//trace/in-indirect-buffer
@@ -310,7 +312,7 @@
        (dotty/trace/narrow-header))
       (dotty/jump-to-matching-trace-header)
       (beginning-of-line)
-      (pcase (dotty/current-line-trace-header)
+      (pcase (dotty-trace/current-line-trace-header)
         (`(opening . ,_)
          (evil-scroll-line-to-top 1)
          (forward-line)
@@ -334,7 +336,7 @@
 
 (defun dotty/trace/narrow-header ()
   (interactive)
-  (-if-let ((type . size) (dotty/current-line-trace-header))
+  (-if-let ((type . size) (dotty-trace/current-line-trace-header))
       (-let [(beg . end) (ecase type
                            ('opening
                             (cons (save-excursion
@@ -359,7 +361,8 @@
 
 ;;; Motions
 
-(defun dotty/current-line-trace-header ()
+(defun dotty-trace/current-line-trace-header ()
+  "Returns information about the trace header on current line, or nil if not looking at a trace header."
   (save-excursion
     (goto-char (line-beginning-position))
     (let ((result (or
@@ -367,9 +370,41 @@
                    (and (looking-at " *<==") 'closing))))
       (and result (cons result (- (match-end 0) (match-beginning 0) 3))))))
 
+(evil-define-motion dotty-trace/jump-to-opening-header ()
+  :type line
+  :jump t
+  (-if-let ((type . size) (dotty-trace/current-line-trace-header))
+
+      (re-search-backward
+       (concat "^" (s-repeat (- size 2) " ") "==>"))
+
+    (while (and (not (dotty-trace/current-line-trace-header))
+                (zerop (forward-line -1)))))
+  )
+
+(evil-define-motion dotty-trace/jump-forwards-to-sibling-header ()
+  :type line
+  :jump t
+  (while (and (not (dotty-trace/current-line-trace-header))
+              (zerop (forward-line 1))))
+  (end-of-line)
+  (-if-let ((type . size) (dotty-trace/current-line-trace-header))
+      (re-search-forward
+       (concat "^" (s-repeat size " ") "==>"))))
+
+(evil-define-motion dotty-trace/jump-backwards-to-sibling-header ()
+  :type line
+  :jump t
+  (while (and (not (dotty-trace/current-line-trace-header))
+              (zerop (forward-line -1))))
+  (beginning-of-line)
+  (-if-let ((type . size) (dotty-trace/current-line-trace-header))
+      (re-search-backward
+       (concat "^" (s-repeat size " ") "==>"))))
+
 (evil-define-motion dotty/jump-to-matching-trace-header ()
   :type line
-  (-if-let ((type . size) (dotty/current-line-trace-header))
+  (-if-let ((type . size) (dotty-trace/current-line-trace-header))
       (ecase type
         ('opening
          (re-search-forward
@@ -511,7 +546,11 @@ If ARG is non-nil, do not ask about saving (mimicks behaviour of `save-some-buff
     "p" #'dotty/trace/peek-header
     "P" #'dotty/trace/preview-header
     "n" #'dotty/trace/narrow-header
-    "<SPC>" #'dotty/jump-to-matching-trace-header)
+    "<SPC>" #'dotty/jump-to-matching-trace-header
+    "[" #'dotty-trace/jump-to-opening-header
+    "{" #'dotty-trace/jump-backwards-to-sibling-header
+    "}" #'dotty-trace/jump-forwards-to-sibling-header
+    )
   )
 
 ;;; Internal functions

@@ -3,4 +3,4 @@
 # key: dbgt
 # --
 
-${1:debug}.println(i"#$3$2 {\${$2.productPrefix}} {{{\\n\${${2:}}\\n}}}")
+${1:`(or yas-arg/dotty-current-printer "debug")`}.println(i"#$3$2 {\${$2.productPrefix}} {{{\\n\${${2:}}\\n}}}")
