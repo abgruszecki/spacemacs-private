@@ -20,6 +20,9 @@
 (defvar sbt/compile-command "compile"
   "Command sent to SBT when compiling the project.")
 
+(defvar sbt/run-command "run"
+  "Command sent to SBT when running the project.")
+
 (defvar-local sbt/inspect-input t
   "Prompt to save project files when sending a command to SBT?")
 
@@ -182,6 +185,10 @@
 (defun sbt/send-compile-command ()
   (interactive (sbt//invocation 'sbt/send-compile-command))
   (sbt/send-command sbt/compile-command))
+
+(defun sbt/send-run-command ()
+  (interactive (sbt//invocation 'sbt/send-run-command))
+  (sbt/send-command sbt/run-command))
 
 (defvar dotty//prints-commented-out-p nil)
 (defmacro dotty//toggle-printing/replace (pattern replacement bound literal)
@@ -520,6 +527,7 @@ If ARG is non-nil, do not ask about saving (mimicks behaviour of `save-some-buff
     "." #'sbt/repeat-last-operation
 
     "!!" #'sbt/send-command
+    "!r" #'sbt/send-run-command
     "!c" #'sbt/send-compile-command
     "!t" #'sbt/send-test-command
 
