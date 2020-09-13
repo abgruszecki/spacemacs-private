@@ -13,14 +13,51 @@
 
 (defconst bespoke-scala-mode-packages
   '(
+    sbt-mode
     (scala-mode :location local)
     ))
+
+(defun bespoke-scala-mode/init-sbt-mode ()
+  (use-package sbt-mode
+    :defer t
+    :config
+    ;; WORKAROUND: https://github.com/ensime/emacs-sbt-mode/issues/31
+    ;; allows for using SPACE in the minibuffer
+    (substitute-key-definition
+     'minibuffer-complete-word
+     'self-insert-command
+     minibuffer-local-completion-map)
+    ;; sbt-supershell kills sbt-mode:  https://github.com/hvesalai/emacs-sbt-mode/issues/152
+    (setq sbt:program-options '("-Dsbt.supershell=false"))
+    :init
+    (progn
+      (spacemacs/declare-prefix-for-mode 'scala-mode "mb" "sbt")
+      (spacemacs/declare-prefix-for-mode 'scala-mode "mg" "goto")
+      (spacemacs/set-leader-keys-for-major-mode 'scala-mode
+        "b." #'sbt-hydra
+        "bb" #'sbt-command
+        "bC" #'sbt-do-clean
+        "bc" #'sbt-do-compile
+        "bt" #'sbt-do-test
+        "br" #'sbt-do-run
+        "bR" #'my-sbt/sbt-do-reload
+        ))))
 
 (defun bespoke-scala-mode/init-scala-mode ()
   (use-package scala-mode
     :defer t
-    :commands
-    (scala-mode))
+    :commands (scala-mode)
+    :config
+    (progn
+      (evil-define-key 'insert scala-mode-map
+        (kbd "RET") #'my-scala/newline-and-indent-with-asterisk)
+      (evil-define-key 'normal scala-mode-map
+        "J" #'my-scala/scala-join-line)
+      (spacemacs/set-leader-keys-for-major-mode 'scala-mode
+        "T TAB" #'my-scala/toggle-indent)
+      )
+
+    )
 
   (progn
     (add-to-list 'auto-mode-alist

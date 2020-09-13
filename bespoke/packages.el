@@ -59,8 +59,4 @@ Each entry is either:
     (spacemacs|hide-lighter evil-org-mode))
   )
 
-(defun bespoke/pre-init-scala-mode ()
-  )
-
-
 ;;; packages.el ends here

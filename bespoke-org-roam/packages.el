@@ -31,7 +31,8 @@
 
 (defconst bespoke-org-roam-packages
   '(org-roam
-    org-roam-bibtex)
+    org-roam-bibtex
+    )
   "The list of Lisp packages required by the bespoke-org-roam layer.
 
 Each entry is either:
@@ -76,7 +77,8 @@ Each entry is either:
                ((kbd "<tab>") . org-roam)
                ((kbd "i")     . org-roam-insert)
                )
-    (spacemacs/set-leader-keys "<f2>" my-spacemacs/org-roam-prefix-map))
+    (spacemacs/set-leader-keys "<f2>" my-spacemacs/org-roam-prefix-map)
+    (spacemacs|hide-lighter org-roam-mode))
 
   (add-to-list 'org-roam-capture-templates
                '("z" "zasób" plain #'org-roam-capture--get-point "%?"
@@ -95,14 +97,16 @@ Each entry is either:
                  :file-name "%<%Y%m%d%H%M%S>-${slug}"
                  :head "#+title: ${title}\n#+roam_key:\n#+roam_tags: @zasób\n"
                  :unnarrowed t))
-
-  (org-roam-mode)
   )
 
 (defun bespoke-org-roam/init-org-roam-bibtex ()
   (use-package org-roam-bibtex
     :after org-roam
-    :hook (org-roam-mode . org-roam-bibtex-mode))
+    :hook (org-roam-mode . org-roam-bibtex-mode)
+    :config
+    (spacemacs|hide-lighter org-roam-bibtex-mode))
+
+  (org-roam-mode)
   )
 
 ;;; packages.el ends here

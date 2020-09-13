@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+#name : find0
+#key : find0
+#contributor : Aleksander Boruch-Gruszecki
+# --
+
+find $1 -print0 $0

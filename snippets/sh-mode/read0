@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+#name : read0
+#key : read0
+#contributor : Aleksander Boruch-Gruszecki
+# --
+read -d '' -r $0
