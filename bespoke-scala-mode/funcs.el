@@ -44,9 +44,7 @@
     (save-excursion
       (beginning-of-line)
       (delete-horizontal-space)
-      (if (or (eq last-command my-scala//ws-indent-last-command)
-              ;; (eq last-command #'my-scala/ws-indent-backwards)
-              )
+      (if (eq last-command my-scala//ws-indent-last-command)
           (indent-to (+ ci (* d scala-indent:step)))
         (indent-to need)))
     (if (< (current-column) (current-indentation))
@@ -56,6 +54,20 @@
 (defun my-scala/ws-indent-backwards ()
   (interactive "*")
   (my-scala/ws-indent -1))
+
+(defun my-scala/toggle-indent ()
+  (interactive)
+  (when (eq major-mode 'scala-mode)
+    (if (eq indent-line-function #'scala-indent:indent-line)
+        (progn
+          (message "Toggle indent: relative to previous line")
+          (setq indent-line-function #'my-scala/ws-indent)
+          (remove-hook 'post-self-insert-hook #'scala-indent:indent-on-special-words 'local))
+
+      (progn
+        (message "Toggle indent: Scala indent")
+        (setq indent-line-function #'scala-indent:indent-line)
+        (add-hook 'post-self-insert-hook #'scala-indent:indent-on-special-words 'local)))))
 
 (defun my-scala/scala-join-line ()
   "Adapt `scala-indent:join-line' to behave more like evil's line join.
@@ -77,20 +89,6 @@ point to the position of the join."
 
     (when join-pos
       (goto-char join-pos))))
-
-(defun my-scala/toggle-indent ()
-  (interactive)
-  (when (eq major-mode 'scala-mode)
-    (if (eq indent-line-function #'scala-indent:indent-line)
-        (progn
-          (message "Toggle indent: relative to previous line")
-          (setq indent-line-function #'my-scala/ws-indent)
-          (remove-hook 'post-self-insert-hook #'scala-indent:indent-on-special-words 'local))
-
-      (progn
-        (message "Toggle indent: Scala indent")
-        (setq indent-line-function #'scala-indent:indent-line)
-        (add-hook 'post-self-insert-hook #'scala-indent:indent-on-special-words 'local)))))
 
 (defun my-sbt/sbt-do-reload ()
   "Execute the sbt `reload' command for the project."
