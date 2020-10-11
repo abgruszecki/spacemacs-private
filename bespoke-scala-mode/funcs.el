@@ -32,48 +32,51 @@
                 (looking-at "^ *$"))
       (forward-line -1))
     (back-to-indentation)
-    (let ((ci (current-column))
-          (need-increment
-           (progn
-             (end-of-line)
-             (skip-chars-backward "\s")
-             (looking-back
-              (rx (or "[" "{" "("
-                      (seq word-boundary
-                           (or
-                            "if" "while" "for" "match" "try"
-                            "then" "else" "do" "finally" "yield" "case"
-                            "=" "=>" "=>>" "<-"
-                            )))))
-             )
-           
-           )
-          ;; (need-decrement
-          ;;  (looking-back (rx (seq "end "
-          ;;                         (or))))
-          ;;  )
-          )
-      (if need-increment
-          (+ ci scala-indent:step)
-        ci))
+    (let ((ci (current-column)))
+      (end-of-line)
+      (skip-chars-backward "\s")
+      (let ((adjustment
+             (if (looking-back (rx (or "[" "{" "("
+                                       "=" "=>" "=>>" "<-"
+                                       )))
+                 +1
+               (if (and (looking-back (rx word-boundary
+                                          (or
+                                           "if" "while" "for" "match" "try"
+                                           "then" "else" "do" "finally" "yield" "case"
+                                          )))
+                        (progn (goto-char (match-beginning 0))
+                               (skip-chars-backward "\s")
+                               (not (looking-back "end"))))
+                   +1
+                 0))))
+        (+ ci (* adjustment scala-indent:step)))
+      )
     ))
 
+(defvar my-scala//ws-indent-last-line nil)
 (defvar my-scala//ws-indent-last-command nil)
 (defun my-scala/ws-indent (&optional direction)
   (interactive "*")
   (let ((ci (current-indentation))
         (cc (current-column))
         (need (my-scala/compute-ws-indent))
-        (d (< 0 (or direction 0))))
+        (d (if (< 0 (or direction 1)) 1 -1)))
     (save-excursion
       (beginning-of-line)
       (delete-horizontal-space)
-      (if (eq last-command my-scala//ws-indent-last-command)
+      (when (looking-at (rx (or "]" "}" ")" "end")))
+        (setq need (- need scala-indent:step)))
+      (if (and (eql (line-number-at-pos) my-scala//ws-indent-last-line)
+               (eq last-command my-scala//ws-indent-last-command))
           (indent-to (+ ci (* d scala-indent:step)))
         (indent-to need)))
     (if (< (current-column) (current-indentation))
         (forward-to-indentation 0))
-    (setq my-scala//ws-indent-last-command this-command)))
+    (setq my-scala//ws-indent-last-command this-command
+          my-scala//ws-indent-last-line (line-number-at-pos)
+    )
+    ))
 
 (defun my-scala/ws-indent-backwards ()
   (interactive "*")
