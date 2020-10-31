@@ -60,25 +60,23 @@ Each entry is either:
       - A list beginning with the symbol `recipe' is a melpa
         recipe.  See: https://github.com/milkypostman/melpa#recipe-format")
 
-(defun bespoke-org-roam/init-org-roam ()
+(defun bespoke-org-roam/post-init-org-roam ()
+  ;; TODO why was this recommended?
   (defconst org-roam-packages
     '(org-roam org-roam-bibtex))
 
   (defvar my-spacemacs/org-roam-prefix-map (make-sparse-keymap)
     "Prefix map for org-roam")
-  (use-package org-roam
-    :custom
-    (org-roam-directory "~/org/roam")
-    (org-roam-db-location "~/.cache/org-roam/org-roam.db")
-    :config
-    (bind-keys :map my-spacemacs/org-roam-prefix-map
-               ((kbd "<f2>")  . org-roam-find-file)
-               ((kbd "<f3>")  . org-roam-find-ref)
-               ((kbd "<tab>") . org-roam)
-               ((kbd "i")     . org-roam-insert)
-               )
-    (spacemacs/set-leader-keys "<f2>" my-spacemacs/org-roam-prefix-map)
-    (spacemacs|hide-lighter org-roam-mode))
+
+  (setq org-roam-directory "~/org/roam"
+        org-roam-db-location "~/.cache/org-roam/org-roam.db")
+
+  (bind-keys :map my-spacemacs/org-roam-prefix-map
+             ((kbd "<f2>")  . org-roam-find-file)
+             ((kbd "<f3>")  . org-roam-find-ref)
+             ((kbd "<tab>") . org-roam)
+             ((kbd "i")     . org-roam-insert))
+  (spacemacs/set-leader-keys "<f2>" my-spacemacs/org-roam-prefix-map)
 
   (add-to-list 'org-roam-capture-templates
                '("z" "zasób" plain #'org-roam-capture--get-point "%?"
@@ -96,17 +94,13 @@ Each entry is either:
                '("p" "pracka" plain #'org-roam-capture--get-point "%?"
                  :file-name "%<%Y%m%d%H%M%S>-${slug}"
                  :head "#+title: ${title}\n#+roam_key:\n#+roam_tags: @zasób\n"
-                 :unnarrowed t))
-  )
+                 :unnarrowed t)))
 
 (defun bespoke-org-roam/init-org-roam-bibtex ()
   (use-package org-roam-bibtex
     :after org-roam
     :hook (org-roam-mode . org-roam-bibtex-mode)
     :config
-    (spacemacs|hide-lighter org-roam-bibtex-mode))
-
-  (org-roam-mode)
-  )
+    (spacemacs|hide-lighter org-roam-bibtex-mode)))
 
 ;;; packages.el ends here

@@ -13,13 +13,20 @@
   (ecase u
     ((2 4) (setq-local scala-indent:step u))))
 
+(defvar my-scala//fix-brace-last-key nil)
 (defun my-scala/fix-brace ()
-  (when (save-excursion
-          (beginning-of-line)
-          (looking-at " *\\}"))
+  ;; (message "this key: %s" (this-command-keys-vector))
+  (when (and (not (eql my-scala//fix-brace-last-key ?\{))
+         (= 1 (length (this-command-keys-vector)))
+             (eql (elt (this-command-keys-vector) 0)
+                  ?\C-m)
+             (save-excursion
+               (beginning-of-line)
+               (looking-at " *\\} *$")))
     (save-excursion
       (insert-char ?\n)
-      (funcall indent-line-function))))
+      (funcall indent-line-function)))
+  (setq my-scala//fix-brace-last-key (elt (this-command-keys-vector) 0)))
 
 (defun my-scala/init ()
   (add-hook 'post-self-insert-hook #'my-scala/fix-brace nil 'local)
@@ -65,7 +72,8 @@
     (save-excursion
       (beginning-of-line)
       (delete-horizontal-space)
-      (when (looking-at (rx (or "]" "}" ")" "end")))
+      ;; TODO match indent
+      (when (looking-at (rx (or "]" "}" ")" "case" "end")))
         (setq need (- need scala-indent:step)))
       (if (and (eql (line-number-at-pos) my-scala//ws-indent-last-line)
                (eq last-command my-scala//ws-indent-last-command))

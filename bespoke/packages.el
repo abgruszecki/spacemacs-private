@@ -14,6 +14,9 @@
 (defconst bespoke-packages
   '(
     (evil-org :location local)
+    ;; post-inits
+    magit
+    vterm
     )
   "The list of Lisp packages required by the bespoke layer.
 
@@ -57,6 +60,42 @@ Each entry is either:
                                  ,@(when org-want-todo-bindings '(todo)))))
     :config
     (spacemacs|hide-lighter evil-org-mode))
+  )
+
+(defun bespoke/pre-init-vterm ()
+  (spacemacs|use-package-add-hook vterm
+    :post-config
+    (define-key vterm-mode-map (kbd "<f1>") nil)
+    (define-key vterm-mode-map (kbd "<f2>") nil)
+    (define-key vterm-mode-map (kbd "<f3>") nil)
+    (define-key vterm-mode-map (kbd "<f4>") nil)
+    (define-key vterm-mode-map (kbd "<prior>") nil)
+    (define-key vterm-mode-map (kbd "<next>") nil)
+
+    (evil-define-key 'insert vterm-mode-map
+      (kbd "<C-left>") #'vterm--self-insert
+      (kbd "<C-right>") #'vterm--self-insert
+      (kbd "C-w") #'vterm--self-insert
+      (kbd "C-k") #'vterm--self-insert
+      (kbd "C-u") #'vterm--self-insert
+      (kbd "C-t") #'vterm--self-insert
+      ))
+  )
+
+(defun bespoke/pre-init-magit ()
+  (defhydra my-magit/smerge-hydra (:color red)
+    "Hydra for in-buffer merge conflict resolution"
+    ("q" nil "quit")
+    ("p" #'smerge-prev)
+    ("n" #'smerge-next)
+    ("w" #'smerge-keep-upper)
+    ("s" #'smerge-keep-lower)
+    ("c" #'smerge-keep-current))
+
+  (spacemacs|use-package-add-hook magit
+    :post-config
+    (spacemacs/set-leader-keys
+      "gR" #'my-magit/smerge-hydra/body))
   )
 
 ;;; packages.el ends here
