@@ -65,6 +65,9 @@
 
     )
 
+  (define-key scala-mode-map (kbd "<backtab>") #'bespoke-scala/ws-indent-backwards)
+  (define-key scala-mode-map (kbd "<f9>") #'bespoke-scala/toggle-indent)
+
   (progn
     (add-to-list 'auto-mode-alist
                  '("\\.\\(scala\\|sbt\\)\\'" . scala-mode))
