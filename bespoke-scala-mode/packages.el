@@ -55,12 +55,12 @@
       (add-hook 'scala-mode-hook #'my-scala/init 'local)
       (evil-define-key 'insert scala-mode-map
         (kbd "RET") #'my-scala/newline-and-indent-with-asterisk
-        (kbd "<backtab>") #'my-scala/ws-indent-backwards)
+        (kbd "<backtab>") #'bespoke-scala/ws-indent-backwards)
       (evil-define-key 'normal scala-mode-map
         "J" #'my-scala/scala-join-line)
       (spacemacs/set-leader-keys-for-major-mode 'scala-mode
         "<f9> `" #'my-scala/set-indent
-        "<f9> TAB" #'my-scala/toggle-indent)
+        "<f9> TAB" #'bespoke-scala/toggle-indent)
       )
 
     )
