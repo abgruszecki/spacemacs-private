@@ -1,3 +1,6 @@
 [submodule "local/om"]
 	path = local/om
 	url = https://github.com/ndwarshuis/om.el
+[submodule "bespoke-scala-mode/local/scala-mode"]
+	path = bespoke-scala-mode/local/scala-mode
+	url = git@github.com:abgruszecki/emacs-scala-mode.git
