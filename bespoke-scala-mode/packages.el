@@ -54,23 +54,22 @@
       (advice-add #'evil-open-above :after #'my-scala//handle-multiline-comment)
       (add-hook 'scala-mode-hook #'my-scala/init 'local)
       (evil-define-key 'insert scala-mode-map
-        (kbd "RET") #'my-scala/newline-and-indent-with-asterisk
+        (kbd "RET") #'my-scala/newline-and-indent-with-asterisk)
+
+      (evil-define-key '(normal insert) scala-mode-map
         (kbd "<backtab>") #'bespoke-scala/ws-indent-backwards)
+
       (evil-define-key 'normal scala-mode-map
         "J" #'my-scala/scala-join-line)
       (spacemacs/set-leader-keys-for-major-mode 'scala-mode
         "<f9> `" #'my-scala/set-indent
         "<f9> TAB" #'bespoke-scala/toggle-indent)
-      )
+      ))
 
-    )
-
-  (define-key scala-mode-map (kbd "<backtab>") #'bespoke-scala/ws-indent-backwards)
-  (define-key scala-mode-map (kbd "<f9>") #'bespoke-scala/toggle-indent)
-
+  ;; TODO is this necessary if scala-mode has similar lines?
   (progn
     (add-to-list 'auto-mode-alist
-                 '("\\.\\(scala\\|sbt\\)\\'" . scala-mode))
-    (modify-coding-system-alist 'file "\\.\\(scala\\|sbt\\)\\'" 'utf-8)))
+                 '("\\.\\(scala\\|sbt\\|sc\\)\\'" . scala-mode))
+    (modify-coding-system-alist 'file "\\.\\(scala\\|sbt\\|sc\\)\\'" 'utf-8)))
 
 ;;; packages.el ends here

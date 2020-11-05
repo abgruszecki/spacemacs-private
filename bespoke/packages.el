@@ -69,6 +69,11 @@ Each entry is either:
     (define-key vterm-mode-map (kbd "<f2>") nil)
     (define-key vterm-mode-map (kbd "<f3>") nil)
     (define-key vterm-mode-map (kbd "<f4>") nil)
+    (define-key vterm-mode-map (kbd "<f5>") nil)
+    (define-key vterm-mode-map (kbd "<f6>") nil)
+    (define-key vterm-mode-map (kbd "<f7>") nil)
+    (define-key vterm-mode-map (kbd "<f8>") nil)
+
     (define-key vterm-mode-map (kbd "<prior>") nil)
     (define-key vterm-mode-map (kbd "<next>") nil)
 
