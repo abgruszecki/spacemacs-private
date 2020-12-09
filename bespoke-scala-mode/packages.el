@@ -52,7 +52,7 @@
       ;; TODO are these better as custom bindings for o/O?
       (advice-add #'evil-open-below :after #'my-scala//handle-multiline-comment)
       (advice-add #'evil-open-above :after #'my-scala//handle-multiline-comment)
-      (add-hook 'scala-mode-hook #'my-scala/init 'local)
+      (add-hook 'scala-mode-hook #'my-scala/init)
       (evil-define-key 'insert scala-mode-map
         (kbd "RET") #'my-scala/newline-and-indent-with-asterisk)
 

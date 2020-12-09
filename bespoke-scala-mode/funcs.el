@@ -14,8 +14,10 @@
     ((2 4) (setq-local scala-indent:step u))))
 
 (defun my-scala/init ()
+  (setq spacemacs-jump-handlers spacemacs-default-jump-handlers)
   (add-hook 'post-self-insert-hook #'bespoke-scala/fix-brace nil 'local)
-  (electric-indent-local-mode 0))
+  (electric-indent-local-mode 0)
+  )
 
 (defun my-scala/scala-join-line ()
   "Adapt `scala-indent:join-line' to behave more like evil's line join.
