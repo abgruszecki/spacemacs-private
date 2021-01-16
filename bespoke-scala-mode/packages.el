@@ -34,6 +34,7 @@
       (spacemacs/declare-prefix-for-mode 'scala-mode "mb" "sbt")
       (spacemacs/declare-prefix-for-mode 'scala-mode "mg" "goto")
       (spacemacs/set-leader-keys-for-major-mode 'scala-mode
+        "b <tab>" #'sbt-start
         "b." #'sbt-hydra
         "bb" #'sbt-command
         "bC" #'sbt-do-clean

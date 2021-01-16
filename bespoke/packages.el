@@ -16,6 +16,7 @@
     (evil-org :location local)
     ;; post-inits
     magit
+    helm-projectile
     vterm
     )
   "The list of Lisp packages required by the bespoke layer.
@@ -62,6 +63,30 @@ Each entry is either:
     (spacemacs|hide-lighter evil-org-mode))
   )
 
+(defun bespoke/pre-init-magit ()
+  (defhydra my-magit/smerge-hydra (:color red)
+    "Hydra for in-buffer merge conflict resolution"
+    ("q" nil "quit")
+    ("p" #'smerge-prev)
+    ("n" #'smerge-next)
+    ("w" #'smerge-keep-upper)
+    ("s" #'smerge-keep-lower)
+    ("c" #'smerge-keep-current))
+
+  (spacemacs|use-package-add-hook magit
+    :post-config
+    (spacemacs/set-leader-keys
+      "gR" #'my-magit/smerge-hydra/body))
+  )
+
+(defun bespoke/pre-init-helm-projectile ()
+  (spacemacs|use-package-add-hook helm-projectile
+    :post-config
+    (helm-add-action-to-source "Run rg in directory"
+                               #'spacemacs/helm-files-do-rg
+                               helm-source-projectile-directories-list
+                               3)))
+
 (defun bespoke/pre-init-vterm ()
   (spacemacs|use-package-add-hook vterm
     :post-config
@@ -85,22 +110,6 @@ Each entry is either:
       (kbd "C-u") #'vterm--self-insert
       (kbd "C-t") #'vterm--self-insert
       ))
-  )
-
-(defun bespoke/pre-init-magit ()
-  (defhydra my-magit/smerge-hydra (:color red)
-    "Hydra for in-buffer merge conflict resolution"
-    ("q" nil "quit")
-    ("p" #'smerge-prev)
-    ("n" #'smerge-next)
-    ("w" #'smerge-keep-upper)
-    ("s" #'smerge-keep-lower)
-    ("c" #'smerge-keep-current))
-
-  (spacemacs|use-package-add-hook magit
-    :post-config
-    (spacemacs/set-leader-keys
-      "gR" #'my-magit/smerge-hydra/body))
   )
 
 ;;; packages.el ends here

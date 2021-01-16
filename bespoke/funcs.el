@@ -1,0 +1,3 @@
+
+
+;;; funcs.el ends here
