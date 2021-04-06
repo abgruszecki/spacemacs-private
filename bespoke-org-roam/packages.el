@@ -97,6 +97,50 @@ Each entry is either:
                    :head "#+title: ${title}\n#+roam_key:\n#+roam_tags: @zasób\n"
                    :unnarrowed t))))
 
+(defun bespoke-org-roam/init-org-roam ()
+  (use-package org-roam
+    :defer t
+    ;; :hook (after-init . org-roam-mode)
+    :init
+    (progn
+      (spacemacs/declare-prefix "aor" "org-roam")
+      (spacemacs/declare-prefix "aord" "org-roam-dailies")
+      (spacemacs/declare-prefix "aort" "org-roam-tags")
+      (spacemacs/set-leader-keys
+        "aordy" 'org-roam-dailies-find-yesterday
+        "aordt" 'org-roam-dailies-find-today
+        "aordT" 'org-roam-dailies-find-tomorrow
+        "aordd" 'org-roam-dailies-find-date
+        "aorf" 'org-roam-find-file
+        "aorg" 'org-roam-graph
+        "aori" 'org-roam-insert
+        "aorI" 'org-roam-insert-immediate
+        "aorl" 'org-roam-buffer-toggle-display
+        "aorta" 'org-roam-tag-add
+        "aortd" 'org-roam-tag-delete
+        "aora" 'org-roam-alias-add)
+
+      (spacemacs/declare-prefix-for-mode 'org-mode "mr" "org-roam")
+      (spacemacs/declare-prefix-for-mode 'org-mode "mrd" "org-roam-dailies")
+      (spacemacs/declare-prefix-for-mode 'org-mode "mrt" "org-roam-tags")
+      (spacemacs/set-leader-keys-for-major-mode 'org-mode
+        "rb" 'org-roam-switch-to-buffer
+        "rdy" 'org-roam-dailies-find-yesterday
+        "rdt" 'org-roam-dailies-find-today
+        "rdT" 'org-roam-dailies-find-tomorrow
+        "rdd" 'org-roam-dailies-find-date
+        "rf" 'org-roam-find-file
+        "rg" 'org-roam-graph
+        "ri" 'org-roam-insert
+        "rI" 'org-roam-insert-immediate
+        "rl" 'org-roam-buffer-toggle-display
+        "rta" 'org-roam-tag-add
+        "rtd" 'org-roam-tag-delete
+        "ra" 'org-roam-alias-add))
+    :config
+    (progn
+      (spacemacs|hide-lighter org-roam-mode))))
+
 (defun bespoke-org-roam/init-org-roam-bibtex ()
   (use-package org-roam-bibtex
     :after org-roam

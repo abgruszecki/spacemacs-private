@@ -28,7 +28,12 @@
      'self-insert-command
      minibuffer-local-completion-map)
     ;; sbt-supershell kills sbt-mode:  https://github.com/hvesalai/emacs-sbt-mode/issues/152
-    (setq sbt:program-options '("-Dsbt.supershell=false"))
+    ;; (setq sbt:program-options '("-Dsbt.supershell=false" "--no-colors"))
+    (setq sbt:program-options '("-Dsbt.supershell=false")
+          ;; sbt:sbt-prompt-regexp "^\\(\\[0J\\)*\\(sbt:[^>]+\\)?>[ ]+"
+          ;; adds color to sbt:prompt regexp
+          sbt:prompt-regexp "^\\(\\[0J\\)*\\(\\(sbt:[^>]+\\)?\\|scala\\)>[ ]+"
+          )
     :init
     (progn
       (spacemacs/declare-prefix-for-mode 'scala-mode "mb" "sbt")
@@ -42,7 +47,10 @@
         "bt" #'sbt-do-test
         "br" #'sbt-do-run
         "bR" #'my-sbt/sbt-do-reload
-        ))))
+        ))
+    ;; :config
+    ;; (define-key sbt-mode-map [remap sbt:get-completions] #'bespoke-sbt/sbt:get-completions)
+    ))
 
 (defun bespoke-scala-mode/init-scala-mode ()
   (use-package scala-mode

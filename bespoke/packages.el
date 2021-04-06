@@ -13,7 +13,10 @@
 
 (defconst bespoke-packages
   '(
+    ox-gfm
+    ;; local
     (evil-org :location local)
+    (bespoke-org-ref :location local)
     ;; post-inits
     magit
     helm-projectile
@@ -46,6 +49,10 @@ Each entry is either:
       - A list beginning with the symbol `recipe' is a melpa
         recipe.  See: https://github.com/milkypostman/melpa#recipe-format")
 
+(defun bespoke/init-ox-gfm ()
+  (use-package ox-gfm
+    :after org))
+
 (defun bespoke/init-evil-org ()
   (use-package evil-org
     :defer t
@@ -61,6 +68,14 @@ Each entry is either:
                                  ,@(when org-want-todo-bindings '(todo)))))
     :config
     (spacemacs|hide-lighter evil-org-mode))
+  )
+
+(defun bespoke/init-bespoke-org-ref ()
+  (use-package bespoke-org-ref
+    :after org-ref
+    :commands
+    (bespoke-org-ref/top-helm-bibtex)
+    )
   )
 
 (defun bespoke/pre-init-magit ()
