@@ -42,6 +42,7 @@
              "Add PDF to library"         'helm-bibtex-add-pdf-to-library))
   "Copied from [[helm-source-bibtex]]")
 
+;;;###autoload
 (defun bespoke-org-ref/top-helm-bibtex ()
   "Copied from [[org-ref-helm-insert-cite-link]]."
   (interactive)
@@ -49,11 +50,6 @@
   (let ((bibtex-completion-bibliography (org-ref-find-bibliography))
         (helm-source-bibtex bespoke-org-ref//helm-source-bibtex))
     (helm-bibtex)))
-
-;;;###autoload
-(defun bespoke-org-ref/test ()
-  (interactive)
-  (message "Hello, world!"))
 
 (provide 'bespoke-org-ref)
 ;;; bespoke-org-ref.el ends here
