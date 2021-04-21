@@ -15,9 +15,9 @@
 
 (defun my-scala/init ()
   (setq spacemacs-jump-handlers spacemacs-default-jump-handlers)
-  (add-hook 'post-self-insert-hook #'bespoke-scala/fix-brace nil 'local)
-  (electric-indent-local-mode 0)
   (flycheck-mode 0)
+
+  (bespoke-scala/init)
   )
 
 (defun my-scala/scala-join-line ()

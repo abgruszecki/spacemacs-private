@@ -87,7 +87,9 @@
         (when out-win
           (with-selected-window out-win
             (with-no-warnings (end-of-buffer))))
-        (redisplay t)))))
+        (redisplay t))
+      ;; TODO: check what is the last line on exit using comint-redirect-filter-functions
+      (message "Redirect completed: %s" (buffer-local-value 'comint-redirect-completed buf)))))
 
 (defun sbt/buffer-name (&optional suffix)
   (concat "*sbt<" (projectile-project-name) ">" suffix "*"))
@@ -182,6 +184,8 @@
          (out-buf (sbt/run cmd (sbt/buffer-name "-output") echo))
          (out-win (display-buffer out-buf)))
     (sbt//block-until-redirect-completed sbt-buf out-win)
+    ;; (with-current-buffer sbt-buf
+    ;;   (message "done: %s" comint-redirect-completed))
     (with-current-buffer out-buf
       (sbt/clean)
       (buffer-string))))
@@ -502,8 +506,10 @@
               (zerop (forward-line 1))))
   (end-of-line)
   (-if-let ((type . size) (dotty-trace/current-line-trace-header))
-      (re-search-forward
-       (concat "^" (s-repeat size " ") "==>"))))
+      (if (= 0 size)
+          (beginning-of-line)
+        (re-search-forward
+         (concat "^" (s-repeat size " ") "==>")))))
 
 (evil-define-motion dotty-trace/jump-backwards-to-sibling-header ()
   :type line
@@ -681,7 +687,7 @@ If ARG is non-nil, do not ask about saving (mimicks behaviour of `save-some-buff
 
 (defun sbt//comint-send-input-advice (underlying &rest args)
   (interactive)
-  (when (and (eq major-mode 'sbt-mode)
+  (when (and (eq major-mode 'bespoke-sbt-mode)
              sbt/inspect-input)
     (dotty//projectile/save-project-files))
   (apply underlying args))

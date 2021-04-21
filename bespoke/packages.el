@@ -12,9 +12,7 @@
 ;;; Code:
 
 (defconst bespoke-packages
-  '(
-    ox-gfm
-    ;; local
+  '(;; local
     (evil-org :location local)
     (bespoke-org-ref :location local)
     ;; post-inits
@@ -49,9 +47,6 @@ Each entry is either:
       - A list beginning with the symbol `recipe' is a melpa
         recipe.  See: https://github.com/milkypostman/melpa#recipe-format")
 
-(defun bespoke/init-ox-gfm ()
-  (use-package ox-gfm
-    :after org))
 
 (defun bespoke/init-evil-org ()
   (use-package evil-org
