@@ -6,6 +6,8 @@
 (require 'evil)
 (require 'projectile)
 
+(require 'sbt-mode)
+
 ;;; Custom
 
 (defcustom dotty/sbt-prompt-regexp "^\\(sbt:[^>]+\\)?>[ ]+"
@@ -18,7 +20,7 @@
   :type 'string
   :group 'dotty)
 
-(defcustom dotty/prompt-regexp "^\\(\\(sbt:[^>]+\\)?\\|scala\\)>[ ]+"
+(defcustom dotty/prompt-regexp "^\\(\\(sbt:[^>]+\\)\\|\\(scala\\)\\)>[ ]+"
   "A regular expression to match sbt and scala console prompts. The prompt MUST NOT match \"^[completions].*\"."
   :type 'string
   :group 'dotty)
@@ -78,8 +80,20 @@
       (apply #'make-comint-in-buffer name buf (car sbt/sbt-command-name) nil (cdr sbt/sbt-command-name))
       buf)))
 
+;; (defvar sbt//variable nil)
+;; (defvar sbt//report-var nil)
+;; (defun sbt//set-variable (str)
+;;   (setf sbt//variable str))
+;; (defun sbt//report ()
+;;   (setf sbt//report-var (list comint-redirect-finished-regexp
+;;                               comint-redirect-previous-input-string
+;;                               sbt//variable)))
+
 (defun sbt//block-until-redirect-completed (buf &optional out-win)
-  (let ((proc (get-buffer-process buf)))
+  (let ((proc (get-buffer-process buf))
+        ;; (comint-redirect-filter-functions (list #'sbt//set-variable))
+        ;; (comint-redirect-hook (cons #'sbt//report comint-redirect-hook))
+        )
     (with-current-buffer buf
       (while (null comint-redirect-completed)
         (accept-process-output proc 0.1)
@@ -88,8 +102,10 @@
           (with-selected-window out-win
             (with-no-warnings (end-of-buffer))))
         (redisplay t))
-      ;; TODO: check what is the last line on exit using comint-redirect-filter-functions
-      (message "Redirect completed: %s" (buffer-local-value 'comint-redirect-completed buf)))))
+      ;; (message "Redirect completed: %s / %s"
+      ;;          (buffer-local-value 'comint-redirect-completed buf)
+      ;;          comint-redirect-hook)
+      )))
 
 (defun sbt/buffer-name (&optional suffix)
   (concat "*sbt<" (projectile-project-name) ">" suffix "*"))
@@ -158,6 +174,28 @@
 (defun sbt/clean ()
   (ansi-color-filter-region (point-min) (point-max)))
 
+(defun sbt/ensure-console-ready ()
+  ;; TODO inspect sbt-hydra:detect-when-launched
+  (let* ((sbt-buf (sbt//ensure-console-open))
+         (proc (get-buffer-process sbt-buf))
+         (out-win (display-buffer sbt-buf)))
+    (with-current-buffer sbt-buf
+      (message "1: %s" comint-last-prompt)
+      (when (not (and comint-last-prompt
+                      (string-match-p comint-prompt-regexp
+                                      (buffer-substring (car comint-last-prompt)
+                                                        (cdr comint-last-prompt)))))
+        (message "2")
+        (while (not (and comint-last-prompt
+                         (string-match-p comint-prompt-regexp
+                                         (buffer-substring (car comint-last-prompt)
+                                                           (cdr comint-last-prompt)))))
+          (accept-process-output proc 0.1)
+          ;; window-point vs. point !
+          (with-selected-window out-win
+            (with-no-warnings (end-of-buffer)))
+          (redisplay t))))))
+
 (defun sbt/run (cmd &optional target-buffer echo)
   (when (and target-buffer (get-buffer target-buffer))
     (with-current-buffer target-buffer
@@ -189,6 +227,16 @@
     (with-current-buffer out-buf
       (sbt/clean)
       (buffer-string))))
+
+(defun sbt/run-until-output (cmd &optional echo)
+  (dotty//projectile/save-project-files)
+  (sbt/ensure-console-ready)
+  (let* ((sbt-buf (sbt//ensure-console-open))
+         (sbt-proc (get-buffer-process sbt-buf))
+         (out-buf (sbt/run cmd (sbt/buffer-name "-output") echo))
+         (out-win (display-buffer out-buf)))
+    (sbt//block-until-redirect-completed sbt-buf out-win)
+    ))
 
 (define-derived-mode dotty-scala-mode scala-mode "Scala/dotty")
 
@@ -443,13 +491,14 @@
 
 (defun dotty//trace/end-of-answer ()
   (interactive)
-  (end-of-line)
-  (backward-char)
-  (assert (looking-at-p "{"))
-  (evil-jump-item)
-  (end-of-line)
-  ;; (backward-char)
-  )
+  (when (save-excursion
+          (end-of-line)
+          (backward-char)
+          (looking-at-p "{"))
+
+    (end-of-line)
+    (evil-jump-item)
+    (end-of-line)))
 
 (defun dotty/trace/narrow-header ()
   (interactive)
@@ -491,12 +540,26 @@
   :type line
   :jump t
   (-if-let ((type . size) (dotty-trace/current-line-trace-header))
-
-      (re-search-backward
-       (concat "^" (s-repeat (- size 2) " ") "==>"))
+      (if (not (and (= size 0) (eq type 'opening)))
+          (re-search-backward
+           (concat "^" (s-repeat (- size 2) " ") "==>"))
+        (user-error "Not moving from top-level opening trace!"))
 
     (while (and (not (dotty-trace/current-line-trace-header))
                 (zerop (forward-line -1)))))
+  )
+
+(evil-define-motion dotty-trace/jump-to-closing-header ()
+  :type line
+  :jump t
+  (-if-let ((type . size) (dotty-trace/current-line-trace-header))
+      (if (not (and (= size 0) (eq type 'closing)))
+          (re-search-forward
+           (concat "^" (s-repeat (- size 2) " ") "<=="))
+        (user-error "Not moving from top-level closing trace!"))
+
+    (while (and (not (dotty-trace/current-line-trace-header))
+                (zerop (forward-line 1)))))
   )
 
 (evil-define-motion dotty-trace/jump-forwards-to-sibling-header ()
@@ -593,15 +656,30 @@ If ARG is non-nil, do not ask about saving (mimicks behaviour of `save-some-buff
 
 ;;; SBT mode
 
-(define-derived-mode bespoke-sbt-mode comint-mode "bspk/SBT"
-  "Bespoke SBT mode"
-  (dotty-minor-mode 1)
+(defun sbt/init ()
 
   ;; NOTE despite docs, this is meaningful on its own (changes redirection behaviour)
   ;; NOTE comint-use-prompt-regexp is unset b/c it screws up input editing
-  (setq comint-prompt-regexp dotty/prompt-regexp)
+  (setq-local comint-prompt-regexp dotty/prompt-regexp
+              comint-use-prompt-regexp nil)
 
-  (add-hook 'comint-redirect-hook #'sbt//post-redirect-cleanup nil t))
+  ;; (remove-hook 'comint-output-filter-functions 'sbt:switch-submode)
+  ;; (setq-local sbt:submode 'sbt)
+  )
+
+(define-derived-mode bespoke-sbt-mode sbt-mode "bspk/SBT"
+  "Bespoke SBT mode"
+  (dotty-minor-mode 1)
+
+  (add-hook 'bespoke-sbt-mode-hook #'sbt/init)
+
+  ;; (add-hook 'comint-redirect-hook #'sbt//report nil t)
+  (add-hook 'comint-redirect-hook #'sbt//post-redirect-cleanup nil t)
+  )
+
+(setq bespoke-sbt-mode-map
+      (let ((map (make-sparse-keymap)))
+        (set-keymap-parent map sbt:mode-map)))
 
 ;;; Dotty trace mode
 
@@ -654,24 +732,6 @@ If ARG is non-nil, do not ask about saving (mimicks behaviour of `save-some-buff
     "c" #'sbt/compile-file
     "C" #'sbt/compile-this-file)
 
-  (evil-define-key 'normal dotty-trace-mode-map
-    (kbd "RET") #'dotty-trace/hs-forward-toggle-node
-    (kbd "<tab>") (lambda () (interactive) (re-search-forward "^#"))
-    (kbd "<backtab>") (lambda () (interactive) (re-search-backward "^#"))
-    (kbd "<C-tab>") (lambda () (interactive) (re-search-forward "^#!"))
-    (kbd "<C-iso-lefttab>") (lambda () (interactive) (re-search-backward "^#!"))
-    "g%" 'dotty/jump-to-matching-trace-header
-    )
-
-  (spacemacs/set-leader-keys-for-major-mode 'dotty-trace-mode
-    "p" #'dotty/trace/peek-header
-    "P" #'dotty/trace/preview-header
-    "n" #'dotty/trace/narrow-header
-    "<SPC>" #'dotty/jump-to-matching-trace-header
-    "[" #'dotty-trace/jump-to-opening-header
-    "{" #'dotty-trace/jump-backwards-to-sibling-header
-    "}" #'dotty-trace/jump-forwards-to-sibling-header
-    )
   )
 
 ;;; Internal functions

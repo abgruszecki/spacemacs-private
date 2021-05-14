@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: dotty-typecomparer-explained
+# key: tcxp
+# --
+{ var res = false; val msg = TypeComparer.explained(tc => res = {
+  $0
+}); dbg.println(msg); res }

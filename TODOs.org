@@ -1,5 +1,0 @@
-Here's the indent function:
-[[file:scala-mode-indent.el::scala-indent:calculate-indent-for-line (&optional point)]]
-
-Here's what we can fiddle with to indent to previous line:
-[[file:scala-mode-indent.el::scala-indent:goto-block-anchor (&optional point)]]
