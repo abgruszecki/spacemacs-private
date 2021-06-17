@@ -1,0 +1,14 @@
+# -*- mode: snippet -*-
+# name: dotty-investigation-header
+# key: inv.h
+# --
+* ${1:test}
+
+  #+begin_src scala :tangle $1.scala
+    $0
+  #+end_src
+
+  #+begin_src elisp :results silent
+    (sbt/run-until-output "scala3-compiler/compile")
+    (sbt/compile-file-for-output "issue/$1.scala")
+  #+end_src
