@@ -68,9 +68,9 @@ Each entry is either:
   (defvar my-spacemacs/org-roam-prefix-map (make-sparse-keymap)
     "Prefix map for org-roam")
   (bind-keys :map my-spacemacs/org-roam-prefix-map
-             ((kbd "<f2>")  . org-roam-find-file)
-             ((kbd "<f3>")  . org-roam-find-ref)
-             ((kbd "<tab>") . org-roam)
+             ((kbd "<f2>")  . org-roam-node-find)
+             ((kbd "<f3>")  . org-roam-ref-find)
+             ((kbd "<tab>") . org-roam-buffer-display-dedicated)
              ((kbd "i")     . org-roam-insert))
   (spacemacs/set-leader-keys "<f2>" my-spacemacs/org-roam-prefix-map)
 
@@ -101,41 +101,41 @@ Each entry is either:
   (use-package org-roam
     :defer t
     ;; :hook (after-init . org-roam-mode)
+    :commands (org-roam-setup)
     :init
     (progn
       (spacemacs/declare-prefix "aor" "org-roam")
       (spacemacs/declare-prefix "aord" "org-roam-dailies")
       (spacemacs/declare-prefix "aort" "org-roam-tags")
       (spacemacs/set-leader-keys
-        "aordy" 'org-roam-dailies-find-yesterday
-        "aordt" 'org-roam-dailies-find-today
-        "aordT" 'org-roam-dailies-find-tomorrow
-        "aordd" 'org-roam-dailies-find-date
-        "aorf" 'org-roam-find-file
+        "aordy" 'org-roam-dailies-goto-yesterday
+        "aordt" 'org-roam-dailies-goto-today
+        "aordT" 'org-roam-dailies-goto-tomorrow
+        "aordd" 'org-roam-dailies-goto-date
+        "aorc" 'org-roam-capture
+        "aorf" 'org-roam-node-find
         "aorg" 'org-roam-graph
-        "aori" 'org-roam-insert
-        "aorI" 'org-roam-insert-immediate
-        "aorl" 'org-roam-buffer-toggle-display
+        "aori" 'org-roam-node-insert
+        "aorl" 'org-roam-buffer-toggle
         "aorta" 'org-roam-tag-add
-        "aortd" 'org-roam-tag-delete
+        "aortr" 'org-roam-tag-remove
         "aora" 'org-roam-alias-add)
 
       (spacemacs/declare-prefix-for-mode 'org-mode "mr" "org-roam")
       (spacemacs/declare-prefix-for-mode 'org-mode "mrd" "org-roam-dailies")
       (spacemacs/declare-prefix-for-mode 'org-mode "mrt" "org-roam-tags")
       (spacemacs/set-leader-keys-for-major-mode 'org-mode
-        "rb" 'org-roam-switch-to-buffer
-        "rdy" 'org-roam-dailies-find-yesterday
-        "rdt" 'org-roam-dailies-find-today
-        "rdT" 'org-roam-dailies-find-tomorrow
-        "rdd" 'org-roam-dailies-find-date
-        "rf" 'org-roam-find-file
+        "rdy" 'org-roam-dailies-goto-yesterday
+        "rdt" 'org-roam-dailies-goto-today
+        "rdT" 'org-roam-dailies-goto-tomorrow
+        "rdd" 'org-roam-dailies-goto-date
+        "rc" 'org-roam-capture
+        "rf" 'org-roam-node-find
         "rg" 'org-roam-graph
-        "ri" 'org-roam-insert
-        "rI" 'org-roam-insert-immediate
-        "rl" 'org-roam-buffer-toggle-display
+        "ri" 'org-roam-node-insert
+        "rl" 'org-roam-buffer-toggle
         "rta" 'org-roam-tag-add
-        "rtd" 'org-roam-tag-delete
+        "rtr" 'org-roam-tag-remove
         "ra" 'org-roam-alias-add))
     :config
     (progn
