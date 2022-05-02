@@ -32,39 +32,9 @@
 (defconst bespoke-org-roam-packages
   '(org-roam
     org-roam-bibtex
-    )
-  "The list of Lisp packages required by the bespoke-org-roam layer.
-
-Each entry is either:
-
-1. A symbol, which is interpreted as a package to be installed, or
-
-2. A list of the form (PACKAGE KEYS...), where PACKAGE is the
-    name of the package to be installed or loaded, and KEYS are
-    any number of keyword-value-pairs.
-
-    The following keys are accepted:
-
-    - :excluded (t or nil): Prevent the package from being loaded
-      if value is non-nil
-
-    - :location: Specify a custom installation location.
-      The following values are legal:
-
-      - The symbol `elpa' (default) means PACKAGE will be
-        installed using the Emacs package manager.
-
-      - The symbol `local' directs Spacemacs to load the file at
-        `./local/PACKAGE/PACKAGE.el'
-
-      - A list beginning with the symbol `recipe' is a melpa
-        recipe.  See: https://github.com/milkypostman/melpa#recipe-format")
+    ))
 
 (defun bespoke-org-roam/pre-init-org-roam ()
-  ;; TODO why was this recommended?
-  ;; (defconst org-roam-packages
-  ;;   '(org-roam org-roam-bibtex))
-
   (defvar my-spacemacs/org-roam-prefix-map (make-sparse-keymap)
     "Prefix map for org-roam")
   (bind-keys :map my-spacemacs/org-roam-prefix-map
@@ -79,23 +49,25 @@ Each entry is either:
     (setq org-roam-directory "~/org/roam"
           org-roam-db-location "~/.cache/org-roam/org-roam.db")
 
-    (add-to-list 'org-roam-capture-templates
-                 '("z" "zasób" plain #'org-roam-capture--get-point "%?"
-                   :file-name "%<%Y%m%d%H%M%S>-${slug}"
-                   :head "#+title: ${title}\n#+roam_tags: @zasób\n"
-                   :unnarrowed t))
+    (setq org-roam-node-display-template "${title:120} ${tags:30}")
 
-    (add-to-list 'org-roam-capture-templates
-                 '("d" "domena" plain #'org-roam-capture--get-point "%?"
-                   :file-name "%<%Y%m%d%H%M%S>-${slug}"
-                   :head "#+title: ${title}\n#+roam_tags: @domena\n"
-                   :unnarrowed t))
+    (setq org-roam-capture-templates
+          '(("z" "zasób" plain "%?"
+             :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
+                                "#+title: ${title}\n#+filetags: :@zasób:\n")
+             :unnarrowed t)
 
-    (add-to-list 'org-roam-capture-templates
-                 '("p" "pracka" plain #'org-roam-capture--get-point "%?"
-                   :file-name "%<%Y%m%d%H%M%S>-${slug}"
-                   :head "#+title: ${title}\n#+roam_key:\n#+roam_tags: @zasób\n"
-                   :unnarrowed t))))
+            ("d" "domena" plain "%?"
+             :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
+                                "#+title: ${title}\n#+filetags: :@domena:\n")
+             :unnarrowed t)
+
+            ("p" "pracka" plain "%?"
+             :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
+                                "#+title: ${title}\n#+filetags: :@pracka:@zasób:\n\n* ZTK\n* Wiedza")
+             :unnarrowed t)))
+
+    ))
 
 (defun bespoke-org-roam/init-org-roam ()
   (use-package org-roam

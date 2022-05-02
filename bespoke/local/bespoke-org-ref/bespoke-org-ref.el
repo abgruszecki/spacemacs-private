@@ -42,14 +42,24 @@
              "Add PDF to library"         'helm-bibtex-add-pdf-to-library))
   "Copied from [[helm-source-bibtex]]")
 
+;; TODO is this necessary?
+(setq bibtex-completion-notes-path "~/org/roam/")
+
 ;;;###autoload
 (defun bespoke-org-ref/top-helm-bibtex ()
   "Copied from [[org-ref-helm-insert-cite-link]]."
   (interactive)
   (org-ref-save-all-bibtex-buffers)
-  (let ((bibtex-completion-bibliography (org-ref-find-bibliography))
-        (helm-source-bibtex bespoke-org-ref//helm-source-bibtex))
-    (helm-bibtex)))
+  (let ((original-bibtex-completion-bibliography bibtex-completion-bibliography)
+        (original-helm-source-bibtex helm-source-bibtex))
+    (setf bibtex-completion-bibliography (org-ref-find-bibliography)
+          helm-source-bibtex bespoke-org-ref//helm-source-bibtex)
+    (unwind-protect
+        (helm-bibtex)
+      (setf bibtex-completion-bibliography original-bibtex-completion-bibliography
+            helm-source-bibtex original-helm-source-bibtex))))
+
+(org-roam-bibtex-mode 1)
 
 (provide 'bespoke-org-ref)
 ;;; bespoke-org-ref.el ends here

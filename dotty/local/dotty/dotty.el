@@ -123,7 +123,7 @@
     (when (get-buffer buffer-name)
       (if (yes-or-no-p "Locked buffer already exists, delete it?")
           (kill-buffer buffer-name)
-        (return)))
+        (cl-return)))
 
     (with-current-buffer (sbt/buffer-name "-output")
       (rename-buffer buffer-name)
@@ -503,7 +503,7 @@
 (defun dotty/trace/narrow-header ()
   (interactive)
   (-if-let ((type . size) (dotty-trace/current-line-trace-header))
-      (-let [(beg . end) (ecase type
+      (-let [(beg . end) (cl-ecase type
                            ('opening
                             (cons (save-excursion
                                     (beginning-of-line)
@@ -587,7 +587,7 @@
 (evil-define-motion dotty/jump-to-matching-trace-header ()
   :type line
   (-if-let ((type . size) (dotty-trace/current-line-trace-header))
-      (ecase type
+      (cl-ecase type
         ('opening
          (re-search-forward
           (concat "^" (s-repeat size " ") "<=="))
