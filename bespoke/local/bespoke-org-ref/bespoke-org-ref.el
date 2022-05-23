@@ -22,6 +22,7 @@
 ;;; Code:
 
 (require 'org-ref)
+(require 'helm-bibtex)
 
 (defvar bespoke-org-ref//helm-source-bibtex
   (helm-build-sync-source "BibTeX entries"
