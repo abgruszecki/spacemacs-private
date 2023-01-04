@@ -32,6 +32,7 @@
 (defconst bespoke-org-roam-packages
   '(org-roam
     org-roam-bibtex
+    (bespoke-org-roam-bibtex :location local)
     ))
 
 (defun bespoke-org-roam/pre-init-org-roam ()
@@ -154,18 +155,23 @@ the same time:
       (magit-insert-section section (org-roam-preview-section)
         (insert (save-excursion
                   (org-roam-fontify-like-in-org-mode
-                  (org-roam-preview-get-contents (org-roam-node-file source-node) point)))
+                   (org-roam-preview-get-contents (org-roam-node-file source-node) point)))
                 "\n")
         (oset section file (org-roam-node-file source-node))
         (oset section point point)
-        (insert ?\n))))
-  )
+        (insert ?\n)))))
 
 (defun bespoke-org-roam/init-org-roam-bibtex ()
   (use-package org-roam-bibtex
     :after org-roam
     :hook (org-roam-mode . org-roam-bibtex-mode)
     :config
-    (spacemacs|hide-lighter org-roam-bibtex-mode)))
+    (spacemacs|hide-lighter org-roam-bibtex-mode))
+  )
+
+(defun bespoke-org-roam/init-bespoke-org-roam-bibtex ()
+  (use-package bespoke-org-roam-bibtex
+    :after org-roam-bibtex)
+  )
 
 ;;; packages.el ends here
