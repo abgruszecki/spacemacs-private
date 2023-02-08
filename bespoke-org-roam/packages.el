@@ -162,16 +162,24 @@ the same time:
         (insert ?\n)))))
 
 (defun bespoke-org-roam/init-org-roam-bibtex ()
-  (use-package org-roam-bibtex
-    :after org-roam
-    :hook (org-roam-mode . org-roam-bibtex-mode)
-    :config
-    (spacemacs|hide-lighter org-roam-bibtex-mode))
+  ;; (use-package org-roam-bibtex
+  ;;   :after org-roam
+  ;;   :hook (org-roam-mode . org-roam-bibtex-mode)
+  ;;   :config
+  ;;   (spacemacs|hide-lighter org-roam-bibtex-mode))
   )
 
 (defun bespoke-org-roam/init-bespoke-org-roam-bibtex ()
+  ;; (message "Entered %s" 'bespoke-org-roam/init-bespoke-org-roam-bibtex)
+  ;; (cl-macrolet ((check-loaded (pkg-sym)
+  ;;                             `(message "Loaded %s? ==> %s" ,pkg-sym (not (eq nil (memq ,pkg-sym package-activated-list))))))
+  ;;   (check-loaded 'org-mode)
+  ;;   (check-loaded 'org-roam)
+  ;;   (check-loaded 'org-roam-bibtex))
+
   (use-package bespoke-org-roam-bibtex
-    :after org-roam-bibtex)
+    ;; :after org-roam-bibtex
+    )
   )
 
 ;;; packages.el ends here
