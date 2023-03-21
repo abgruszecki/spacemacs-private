@@ -24,6 +24,7 @@
 (require 'org-ref)
 (require 'org-ref-helm)
 (require 'helm-bibtex)
+(require 'ox-gfm)
 
 (defvar bespoke-org-ref//helm-source-bibtex
   (helm-build-sync-source "BibTeX entries"
@@ -62,6 +63,30 @@
             helm-source-bibtex original-helm-source-bibtex))))
 
 (org-roam-bibtex-mode 1)
+
+;;;###autoload
+(defun bespoke-org-ref/export-as-gh-md (&optional _async subtreep visible-only body-only info)
+  "Export the buffer to an ORG buffer and open.
+We only make a buffer here to avoid overwriting the original file.
+See `org-export-as' for the meaning of ASYNC SUBTREEP
+VISIBLE-ONLY BODY-ONLY and INFO."
+  (let* ((export-buf "*org-ref GH MD Export*")
+         (backend 'gfm)
+         export)
+    (org-export-with-buffer-copy
+     (org-ref-process-buffer 'org subtreep)
+     (setq export (org-export-as backend subtreep visible-only body-only info))
+     (with-current-buffer (get-buffer-create export-buf)
+       (erase-buffer)
+       (insert export)
+       (markdown-mode)))
+    (pop-to-buffer export-buf)))
+
+;;;###autoload
+(org-export-define-derived-backend 'bespoke-org-ref 'org
+  :menu-entry
+  '(?R "Bespoke org-ref export"
+       ((?G "to GH Markdown buffer" bespoke-org-ref/export-as-gh-md))))
 
 (provide 'bespoke-org-ref)
 ;;; bespoke-org-ref.el ends here
