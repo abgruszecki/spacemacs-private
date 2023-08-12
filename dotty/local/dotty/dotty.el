@@ -504,7 +504,7 @@
   (interactive)
   (-if-let ((type . size) (dotty-trace/current-line-trace-header))
       (-let [(beg . end) (cl-ecase type
-                           ('opening
+                           (opening
                             (cons (save-excursion
                                     (beginning-of-line)
                                     (point))
@@ -513,7 +513,7 @@
                                     (dotty//trace/end-of-answer)
                                     (point)
                                     )))
-                           ('closing
+                           (closing
                             (cons (save-excursion
                                     (dotty/jump-to-matching-trace-header)
                                     (beginning-of-line)
