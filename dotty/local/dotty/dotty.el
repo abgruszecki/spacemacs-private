@@ -588,12 +588,12 @@
   :type line
   (-if-let ((type . size) (dotty-trace/current-line-trace-header))
       (cl-ecase type
-        ('opening
+        (opening
          (re-search-forward
           (concat "^" (s-repeat size " ") "<=="))
          (beginning-of-line-text))
 
-        ('closing
+        (closing
          (re-search-backward
           (concat "^" (s-repeat size " ") "==>"))
          (beginning-of-line-text)))

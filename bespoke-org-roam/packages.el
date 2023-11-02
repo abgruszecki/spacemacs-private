@@ -35,6 +35,13 @@
     (bespoke-org-roam-bibtex :location local)
     ))
 
+(defvar bspk//capture-registers '())
+(defun bspk//capture-register (key)
+  (if-let* ((cell (plist-member bspk//capture-registers key))
+            (entry (when cell (cadr cell))))
+      entry
+    (format "<Empty: %s>" key)))
+
 (defun bespoke-org-roam/pre-init-org-roam ()
   (defvar my-spacemacs/org-roam-prefix-map (make-sparse-keymap)
     "Prefix map for org-roam")
@@ -53,10 +60,19 @@
     (setq org-roam-node-display-template "${title:120} ${tags:30}")
 
     (setq org-roam-capture-templates
-          '(("z" "zasób" plain "%?"
+          `(("z" "zasób" plain "%?"
              :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
                                 "#+title: ${title}\n#+filetags: :@zasób:\n")
              :unnarrowed t)
+
+            ("l" "log")
+            ("ll" "log/doktorat" entry "* %^{Verb|Read|Seen|Re-read}: [[%(bspk//capture-register :url)][%(bspk//capture-register :title)]]  %(org-set-tags \":log:\")%?"
+             :if-new (file+olp "~/org/roam/doktorat.org" ("Notes"))
+             :prepend t
+             :prepare-finalize ,(lambda ()
+                                  (beginning-of-buffer)
+                                  (org-align-tags))
+             )
 
             ("p" "pracka" plain "%?"
              :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
